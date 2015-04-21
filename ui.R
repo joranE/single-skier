@@ -7,6 +7,7 @@
 
 library(shiny)
 library(shinydashboard)
+source("load_nations.R")
 
 shinyUI(dashboardPage(
   #Header
@@ -16,7 +17,7 @@ shinyUI(dashboardPage(
   dashboardSidebar(
     selectInput(inputId = "nationInput",
                 label = "Nation",
-                choices = c("Choose..." = "","Canada" = "CAN","United States" = "USA"),
+                choices = c("Choose..." = "",NATIONS),
                 selected = NULL,
                 selectize = TRUE),
     selectInput(inputId = "nameInput",

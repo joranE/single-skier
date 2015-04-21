@@ -2,6 +2,7 @@ library(shiny)
 library(shinydashboard)
 source("helpers.R")
 source("load_data.R")
+source("load_nations.R")
 
 shinyServer(function(input, output, session) {
   
