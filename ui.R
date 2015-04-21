@@ -37,7 +37,9 @@ shinyUI(dashboardPage(
     hr(),
     helpText("Choose a nation and then an individual from that nation. Click on one of the sidebar options 
              to see the results."),
-    helpText("These plots show only one athlete at a time. Plots with small amounts of data may be omitted.")),
+    helpText("These plots show only one athlete at a time. Plots with small amounts of data may be omitted."),
+    helpText("Only shows athletes who have competed at the World Cup, 
+             Olympic, World Championship or Tour de Ski level.")),
   
   #Body
   dashboardBody(
