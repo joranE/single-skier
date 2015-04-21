@@ -1,4 +1,3 @@
-library(RSQLite)
 library(dplyr)
 library(ggplot2)
 library(scales)
@@ -14,7 +13,7 @@ plot_dst <- function(nm,type = c("points","rank")){
 	yval <- switch(type,"points" = "fispoints","rank" = "rank")
 	ylab <- switch(type,"points" = "FIS Points","rank" = "Finish Place")
 	plot_data <- filter(DATA,name == nm & type == "Distance")
-	if (NROW(plot_data) == 0){
+	if (NROW(plot_data) < 5){
 		return(NULL)
 	}
 	if (type == "rank"){
@@ -37,7 +36,7 @@ plot_dst <- function(nm,type = c("points","rank")){
 
 plot_spr <- function(nm){
 	plot_data <- filter(DATA,name == nm & type == "Sprint")
-	if (NROW(plot_data) == 0){
+	if (NROW(plot_data) < 5){
 		return(NULL)
 	}
 	plot_data$date <- as.Date(plot_data$date)
@@ -60,7 +59,7 @@ plot_spr_bar <- function(nms,
 					 scientific = FALSE, ...)
 	}
 	spr_data <- filter(DATA,name == nms & type == "Sprint")
-	if (NROW(spr_data) == 0){
+	if (NROW(spr_data) < 5){
 		return(NULL)
 	}
 	spr_data$lev <- cut(spr_data$rank,
