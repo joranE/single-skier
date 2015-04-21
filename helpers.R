@@ -8,11 +8,24 @@ tech_colors <- brewer.pal(n = 3,name = "Set1")
 tech_colors <- setNames(tech_colors,c("C","F","FC"))
 tech_labels <- c("Classic","Freestyle","Pursuit")
 
-plot_dst <- function(nm,type = c("points","rank")){
+plot_dst <- function(nm,type = c("points","rank","mpb"),maj_int = TRUE){
 	type <- match.arg(type)
-	yval <- switch(type,"points" = "fispoints","rank" = "rank")
-	ylab <- switch(type,"points" = "FIS Points","rank" = "Finish Place")
-	plot_data <- filter(DATA,name == nm & type == "Distance")
+	yval <- switch(type,
+                 "points" = "fispoints",
+                 "rank" = "rank",
+                 "mpb" = "mpb")
+	ylab <- switch(type,
+                 "points" = "FIS Points",
+                 "rank" = "Finishing Place",
+                 "mpb" = "Standardized % Behind Median")
+  if (type == "mpb"){
+    plot_data <- filter(DATA,name == nm & type == "Distance" & !is.na(mpb))
+  }else{
+    plot_data <- filter(DATA,name == nm & type == "Distance")
+  }
+  if (maj_int){
+    plot_data <- filter(plot_data,cat1 %in% c("WC","WSC","OWG","TDS"))
+  }
 	if (NROW(plot_data) < 5){
 		return(NULL)
 	}
@@ -34,18 +47,28 @@ plot_dst <- function(nm,type = c("points","rank")){
 																		 size=9,color = "black"))
 }
 
-plot_spr <- function(nm){
+plot_spr <- function(nm,type = c("points","rank"),maj_int = TRUE){
+  type <- match.arg(type)
+  yval <- switch(type,
+                 "points" = "fispoints",
+                 "rank" = "rank")
+  ylab <- switch(type,
+                 "points" = "FIS Points",
+                 "rank" = "Finishing Place")
 	plot_data <- filter(DATA,name == nm & type == "Sprint")
+	if (maj_int){
+	  plot_data <- filter(plot_data,cat1 %in% c("WC","WSC","OWG","TDS"))
+	}
 	if (NROW(plot_data) < 5){
 		return(NULL)
 	}
 	plot_data$date <- as.Date(plot_data$date)
-	ggplot(plot_data,aes_string(x = "date",y = "rank")) + 
+	ggplot(plot_data,aes_string(x = "date",y = yval)) + 
 		geom_hline(yintercept = 30,color = "black") +
 		geom_point(aes(color = tech)) + 
 		scale_color_manual(values = tech_colors,labels = tech_labels) +
 		scale_x_date(breaks = date_breaks(width = "1 year")) +
-		labs(x = NULL,y = "Finishing Place",color = "Technique") + 
+		labs(x = NULL,y = ylab,color = "Technique") + 
 		theme(legend.position = "bottom",
 					legend.direction = "horizontal",
 					axis.text.x = element_text(hjust=0,vjust=1,angle=310,
@@ -53,12 +76,16 @@ plot_spr <- function(nm){
 }
 
 plot_spr_bar <- function(nms,
-										 byTech = FALSE){
+										 byTech = FALSE,
+                     maj_int = TRUE){
 	commapos <- function(x, ...) {
 		format(abs(x), big.mark = ",", trim = TRUE,
 					 scientific = FALSE, ...)
 	}
 	spr_data <- filter(DATA,name == nms & type == "Sprint")
+	if (maj_int){
+	  plot_data <- filter(spr_data,cat1 %in% c("WC","WSC","OWG","TDS"))
+	}
 	if (NROW(spr_data) < 5){
 		return(NULL)
 	}
@@ -133,4 +160,72 @@ plot_spr_bar <- function(nms,
 					legend.direction = "horizontal") + 
 		guides(fill = guide_legend(reverse = TRUE))
 	p
+}
+
+ath_summary <- function(nm){
+  ath <- filter(DATA,name == nm)
+  
+  ath_wjc <- filter(ath,cat1 == 'WJC') %>%
+    arrange(desc(season),desc(date)) %>%
+    select(season,date,type,length,tech,rank,rankqual,fispoints) %>%
+    rename(Season = season,
+           Date = date,
+           Type = type,
+           Length = length,
+           Tech = tech,
+           Posn = rank,
+           QualPosn = rankqual,
+           FISPoints = fispoints)
+  if (nrow(ath_wjc) == 0){
+    ath_wjc <- setNames(data.frame(as.list(rep(NA,8))),names(ath_wjc))
+  }
+  ath_u23 <- filter(ath,cat1 == 'U23') %>%
+    arrange(desc(season),desc(date)) %>%
+    select(season,date,type,length,tech,rank,rankqual,fispoints) %>%
+    rename(Season = season,
+           Date = date,
+           Type = type,
+           Length = length,
+           Tech = tech,
+           Posn = rank,
+           QualPosn = rankqual,
+           FISPoints = fispoints)
+  if (nrow(ath_u23) == 0){
+    ath_u23 <- setNames(data.frame(as.list(rep(NA,8))),names(ath_u23))
+  }
+  
+  ath_maj <- filter(ath,cat1 %in% c('WC','OWG','WSC','TDS')) %>%
+    group_by(cat1,type) %>%
+    summarise(Races = n_distinct(raceid),
+              Wins = sum(rank == 1,na.rm = TRUE),
+              Podiums = sum(rank <= 3,na.rm = TRUE),
+              Top30 = sum(rank <= 30,na.rm = TRUE)) %>%
+    rename(Event = cat1,Type = type)
+  ath_maj$Event <- factor(c('WC' = 'World Cup',
+                            'OWG' = 'Olympics',
+                            'WSC' = 'World Champs',
+                            'TDS' = 'Tour de Ski')[ath_maj$Event],
+                          levels = c('World Cup','Tour de Ski','World Champs','Olympics','Total'))
+  ath_maj <- arrange(ath_maj,Event)
+  if (nrow(ath_maj) == 0){
+    ath_maj <- setNames(data.frame(as.list(rep(NA,6))),names(ath_maj))
+  }
+  
+  ath_maj_tot <- filter(ath,cat1 %in% c('WC','OWG','WSC','TDS')) %>%
+    group_by(type) %>%
+    summarise(Event = "Total",
+              Races = n_distinct(raceid),
+              Wins = sum(rank == 1,na.rm = TRUE),
+              Podiums = sum(rank <= 3,na.rm = TRUE),
+              Top30 = sum(rank <= 30,na.rm = TRUE)) %>%
+    rename(Type = type) %>%
+    select(Event,Type,Races,Wins,Podiums,Top30)
+  ath_maj_tot$Event <- factor(ath_maj_tot$Event,
+                              levels = c('World Cup','Tour de Ski','World Champs','Olympics','Total'))
+  if (nrow(ath_maj_tot) == 0){
+    ath_maj_tot <- NULL
+  }
+  return(list(ath_wjc = ath_wjc,
+              ath_u23 = ath_u23,
+              ath_maj = rbind(ath_maj,ath_maj_tot)))
 }
