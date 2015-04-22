@@ -37,9 +37,13 @@ shinyUI(dashboardPage(
     hr(),
     helpText("Choose a nation and then an individual from that nation. Click on one of the sidebar options 
              to see the results."),
+    hr(),
     helpText("These plots show only one athlete at a time. Plots with small amounts of data may be omitted."),
     helpText("Only shows athletes who have competed at the World Cup, 
-             Olympic, World Championship or Tour de Ski level.")),
+             Olympic, World Championship or Tour de Ski level. These events are referred to as 'Major'."),
+    hr(),
+    helpText("Pursuit refers to what FIS now calls Skiathlon; Handicap refers to what FIS now calls Pursuit and
+             Pursuit Break refers to the older one or two day pursuits.")),
   
   #Body
   dashboardBody(
@@ -65,6 +69,12 @@ shinyUI(dashboardPage(
                  box(tableOutput("majTable"),
                      width = NULL,
                      title = "Major Results",
+                     solidHeader = TRUE,
+                     collapsible = TRUE,
+                     status = "success"),
+                 box(tableOutput("startTechTable"),
+                     width = NULL,
+                     title = "Median Distance Results (Major)",
                      solidHeader = TRUE,
                      collapsible = TRUE,
                      status = "success")

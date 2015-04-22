@@ -2,11 +2,13 @@ library(dplyr)
 library(ggplot2)
 library(scales)
 library(RColorBrewer)
+library(reshape2)
 library(readr)
 
 tech_colors <- brewer.pal(n = 3,name = "Set1")
 tech_colors <- setNames(tech_colors,c("C","F","FC"))
 tech_labels <- c("Classic","Freestyle","Pursuit")
+MAJ_INT <- c("WC","WSC","OWG","OWG")
 
 plot_dst <- function(nm,type = c("points","rank","mpb"),maj_int = TRUE){
 	type <- match.arg(type)
@@ -24,7 +26,7 @@ plot_dst <- function(nm,type = c("points","rank","mpb"),maj_int = TRUE){
     plot_data <- filter(DATA,name == nm & type == "Distance")
   }
   if (maj_int){
-    plot_data <- filter(plot_data,cat1 %in% c("WC","WSC","OWG","TDS"))
+    plot_data <- filter(plot_data,cat1 %in% MAJ_INT)
   }
 	if (NROW(plot_data) < 5){
 		return(NULL)
@@ -57,7 +59,7 @@ plot_spr <- function(nm,type = c("points","rank"),maj_int = TRUE){
                  "rank" = "Finishing Place")
 	plot_data <- filter(DATA,name == nm & type == "Sprint")
 	if (maj_int){
-	  plot_data <- filter(plot_data,cat1 %in% c("WC","WSC","OWG","TDS"))
+	  plot_data <- filter(plot_data,cat1 %in% MAJ_INT)
 	}
 	if (NROW(plot_data) < 5){
 		return(NULL)
@@ -84,7 +86,7 @@ plot_spr_bar <- function(nms,
 	}
 	spr_data <- filter(DATA,name == nms & type == "Sprint")
 	if (maj_int){
-	  plot_data <- filter(spr_data,cat1 %in% c("WC","WSC","OWG","TDS"))
+	  plot_data <- filter(spr_data,cat1 %in% MAJ_INT)
 	}
 	if (NROW(spr_data) < 5){
 		return(NULL)
@@ -162,6 +164,7 @@ plot_spr_bar <- function(nms,
 	p
 }
 
+#Summary table functions
 ath_wjc <- function(nm){
   ath <- filter(DATA,name == nm)
   
@@ -203,7 +206,7 @@ ath_u23 <- function(nm){
 
 ath_maj <- function(nm){
   ath <- filter(DATA,name == nm)
-  maj <- filter(ath,cat1 %in% c('WC','OWG','WSC','TDS')) %>%
+  maj <- filter(ath,cat1 %in% MAJ_INT) %>%
     group_by(cat1,type) %>%
     summarise(Races = n_distinct(raceid),
               Wins = sum(rank == 1,na.rm = TRUE),
@@ -220,7 +223,7 @@ ath_maj <- function(nm){
     maj <- setNames(data.frame(as.list(rep(NA,6))),names(maj))
   }
   
-  maj_tot <- filter(ath,cat1 %in% c('WC','OWG','WSC','TDS')) %>%
+  maj_tot <- filter(ath,cat1 %in% MAJ_INT) %>%
     group_by(type) %>%
     summarise(Event = "Total",
               Races = n_distinct(raceid),
@@ -235,4 +238,23 @@ ath_maj <- function(nm){
     maj_tot <- NULL
   }
   rbind(maj,maj_tot)
+}
+
+start_tech <- function(nm){
+  mb <- filter(DATA,
+               name == nm & 
+                 type == 'Distance' & 
+                 cat1 %in% MAJ_INT)
+  mb$tech <- factor(mb$tech,
+                    levels = c('C','F','FC'),
+                    labels = c('Classic','Freestyle','Both'))
+  mb$start <- factor(mb$start,
+                     levels = c('Interval','Mass','Pursuit','Handicap','Pursuit Break'))
+  maj_start_tech <- dcast(mb,
+                          start ~ tech,
+                          fun.aggregate = function(x) {paste(median(x),paste0("(n=",length(x),")"))},
+                          value.var = "rank",
+                          fill = NA_character_)
+  colnames(maj_start_tech)[1] <- "Type"
+  maj_start_tech
 }

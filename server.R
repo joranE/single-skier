@@ -53,10 +53,12 @@ shinyServer(function(input, output, session) {
   wjc_table <- reactive({ath_wjc(nm = input$nameInput)})
   u23_table <- reactive({ath_u23(nm = input$nameInput)})
   maj_table <- reactive({ath_maj(nm = input$nameInput)})
+  start_tech_table <- reactive({start_tech(nm = input$nameInput)})
   
   #Render summary tables
   output$wjcTable <- renderTable({wjc_table()},include.rownames = FALSE)
   output$u23Table <- renderTable({u23_table()},include.rownames = FALSE)
   output$majTable <- renderTable({maj_table()},include.rownames = FALSE)
+  output$startTechTable <- renderTable({start_tech_table()},include.rownames = FALSE)
 }
 )
