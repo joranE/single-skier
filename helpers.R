@@ -162,10 +162,10 @@ plot_spr_bar <- function(nms,
 	p
 }
 
-ath_summary <- function(nm){
+ath_wjc <- function(nm){
   ath <- filter(DATA,name == nm)
   
-  ath_wjc <- filter(ath,cat1 == 'WJC') %>%
+  wjc <- filter(ath,cat1 == 'WJC') %>%
     arrange(desc(season),desc(date)) %>%
     select(season,date,type,length,tech,rank,rankqual,fispoints) %>%
     rename(Season = season,
@@ -176,10 +176,15 @@ ath_summary <- function(nm){
            Posn = rank,
            QualPosn = rankqual,
            FISPoints = fispoints)
-  if (nrow(ath_wjc) == 0){
-    ath_wjc <- setNames(data.frame(as.list(rep(NA,8))),names(ath_wjc))
+  if (nrow(wjc) == 0){
+    wjc <- setNames(data.frame(as.list(rep(NA,8))),names(wjc))
   }
-  ath_u23 <- filter(ath,cat1 == 'U23') %>%
+  wjc
+}
+
+ath_u23 <- function(nm){
+  ath <- filter(DATA,name == nm)
+  u23 <- filter(ath,cat1 == 'U23') %>%
     arrange(desc(season),desc(date)) %>%
     select(season,date,type,length,tech,rank,rankqual,fispoints) %>%
     rename(Season = season,
@@ -190,28 +195,32 @@ ath_summary <- function(nm){
            Posn = rank,
            QualPosn = rankqual,
            FISPoints = fispoints)
-  if (nrow(ath_u23) == 0){
-    ath_u23 <- setNames(data.frame(as.list(rep(NA,8))),names(ath_u23))
+  if (nrow(u23) == 0){
+    u23 <- setNames(data.frame(as.list(rep(NA,8))),names(u23))
   }
-  
-  ath_maj <- filter(ath,cat1 %in% c('WC','OWG','WSC','TDS')) %>%
+  u23
+}
+
+ath_maj <- function(nm){
+  ath <- filter(DATA,name == nm)
+  maj <- filter(ath,cat1 %in% c('WC','OWG','WSC','TDS')) %>%
     group_by(cat1,type) %>%
     summarise(Races = n_distinct(raceid),
               Wins = sum(rank == 1,na.rm = TRUE),
               Podiums = sum(rank <= 3,na.rm = TRUE),
               Top30 = sum(rank <= 30,na.rm = TRUE)) %>%
     rename(Event = cat1,Type = type)
-  ath_maj$Event <- factor(c('WC' = 'World Cup',
+  maj$Event <- factor(c('WC' = 'World Cup',
                             'OWG' = 'Olympics',
                             'WSC' = 'World Champs',
-                            'TDS' = 'Tour de Ski')[ath_maj$Event],
+                            'TDS' = 'Tour de Ski')[maj$Event],
                           levels = c('World Cup','Tour de Ski','World Champs','Olympics','Total'))
-  ath_maj <- arrange(ath_maj,Event)
-  if (nrow(ath_maj) == 0){
-    ath_maj <- setNames(data.frame(as.list(rep(NA,6))),names(ath_maj))
+  maj <- arrange(maj,Event)
+  if (nrow(maj) == 0){
+    maj <- setNames(data.frame(as.list(rep(NA,6))),names(maj))
   }
   
-  ath_maj_tot <- filter(ath,cat1 %in% c('WC','OWG','WSC','TDS')) %>%
+  maj_tot <- filter(ath,cat1 %in% c('WC','OWG','WSC','TDS')) %>%
     group_by(type) %>%
     summarise(Event = "Total",
               Races = n_distinct(raceid),
@@ -220,12 +229,10 @@ ath_summary <- function(nm){
               Top30 = sum(rank <= 30,na.rm = TRUE)) %>%
     rename(Type = type) %>%
     select(Event,Type,Races,Wins,Podiums,Top30)
-  ath_maj_tot$Event <- factor(ath_maj_tot$Event,
+  maj_tot$Event <- factor(maj_tot$Event,
                               levels = c('World Cup','Tour de Ski','World Champs','Olympics','Total'))
-  if (nrow(ath_maj_tot) == 0){
-    ath_maj_tot <- NULL
+  if (nrow(maj_tot) == 0){
+    maj_tot <- NULL
   }
-  return(list(ath_wjc = ath_wjc,
-              ath_u23 = ath_u23,
-              ath_maj = rbind(ath_maj,ath_maj_tot)))
+  rbind(maj,maj_tot)
 }
