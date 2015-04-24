@@ -245,6 +245,7 @@ start_tech <- function(nm){
                name == nm & 
                  type == 'Distance' & 
                  cat1 %in% MAJ_INT)
+  if (nrow(mb) == 0) return(NULL)
   mb$tech <- factor(mb$tech,
                     levels = c('C','F','FC'),
                     labels = c('Classic','Freestyle','Both'))

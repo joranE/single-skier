@@ -4,7 +4,7 @@ source("helpers.R")
 source("load_data.R")
 source("load_nations.R")
 
-shinyServer(function(input, output, session) {
+function(input, output, session) {
   
   #Update name selections based on nation selection
   observe({
@@ -61,4 +61,4 @@ shinyServer(function(input, output, session) {
   output$majTable <- renderTable({maj_table()},include.rownames = FALSE)
   output$startTechTable <- renderTable({start_tech_table()},include.rownames = FALSE)
 }
-)
+
