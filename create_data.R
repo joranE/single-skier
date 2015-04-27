@@ -1,5 +1,5 @@
-#library(statskier)
-
+# library(statskier)
+# 
 # con <- db_xc()
 # x <- query(con,"select * from main")
 # 
@@ -22,3 +22,10 @@
 #             sep = ",",
 #             row.names = FALSE,
 #             col.names = TRUE)
+
+# fis_db <- src_sqlite("fis.sqlite3",create = TRUE)
+# fis_main <- copy_to(fis_db,
+#                     out,
+#                     name = "main",
+#                     temporary = FALSE,
+#                     indexes = list("raceid","fisid","cat1","type"))

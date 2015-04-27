@@ -36,6 +36,7 @@ plot_dst <- function(nm,type = c("points","rank","mpb"),maj_int = TRUE){
 	}else{
 		pts_line <- NULL
 	}
+  plot_data <- plot_data %>% collect()
 	plot_data$date <- as.Date(plot_data$date)
 	ggplot(plot_data,aes_string(x = "date",y = yval)) + 
 		pts_line + 
@@ -64,6 +65,7 @@ plot_spr <- function(nm,type = c("points","rank"),maj_int = TRUE){
 	if (NROW(plot_data) < 5){
 		return(NULL)
 	}
+  plot_data <- plot_data %>% collect()
 	plot_data$date <- as.Date(plot_data$date)
 	ggplot(plot_data,aes_string(x = "date",y = yval)) + 
 		geom_hline(yintercept = 30,color = "black") +
@@ -84,9 +86,9 @@ plot_spr_bar <- function(nms,
 		format(abs(x), big.mark = ",", trim = TRUE,
 					 scientific = FALSE, ...)
 	}
-	spr_data <- filter(DATA,name == nms & type == "Sprint")
+	spr_data <- filter(DATA,name == nms & type == "Sprint") %>% collect()
 	if (maj_int){
-	  plot_data <- filter(spr_data,cat1 %in% MAJ_INT)
+	  spr_data <- filter(spr_data,cat1 %in% MAJ_INT)
 	}
 	if (NROW(spr_data) < 5){
 		return(NULL)
@@ -178,7 +180,8 @@ ath_wjc <- function(nm){
            Tech = tech,
            Posn = rank,
            QualPosn = rankqual,
-           FISPoints = fispoints)
+           FISPoints = fispoints) %>%
+    collect()
   if (nrow(wjc) == 0){
     wjc <- setNames(data.frame(as.list(rep(NA,8))),names(wjc))
   }
@@ -197,7 +200,8 @@ ath_u23 <- function(nm){
            Tech = tech,
            Posn = rank,
            QualPosn = rankqual,
-           FISPoints = fispoints)
+           FISPoints = fispoints) %>%
+    collect()
   if (nrow(u23) == 0){
     u23 <- setNames(data.frame(as.list(rep(NA,8))),names(u23))
   }
@@ -207,11 +211,12 @@ ath_u23 <- function(nm){
 ath_maj <- function(nm){
   ath <- filter(DATA,name == nm)
   maj <- filter(ath,cat1 %in% MAJ_INT) %>%
+    collect() %>%
     group_by(cat1,type) %>%
     summarise(Races = n_distinct(raceid),
-              Wins = sum(rank == 1,na.rm = TRUE),
-              Podiums = sum(rank <= 3,na.rm = TRUE),
-              Top30 = sum(rank <= 30,na.rm = TRUE)) %>%
+              Wins = sum(rank == 1),
+              Podiums = sum(rank <= 3),
+              Top30 = sum(rank <= 30)) %>%
     rename(Event = cat1,Type = type)
   maj$Event <- factor(c('WC' = 'World Cup',
                             'OWG' = 'Olympics',
@@ -224,12 +229,13 @@ ath_maj <- function(nm){
   }
   
   maj_tot <- filter(ath,cat1 %in% MAJ_INT) %>%
+    collect() %>%
     group_by(type) %>%
     summarise(Event = "Total",
               Races = n_distinct(raceid),
-              Wins = sum(rank == 1,na.rm = TRUE),
-              Podiums = sum(rank <= 3,na.rm = TRUE),
-              Top30 = sum(rank <= 30,na.rm = TRUE)) %>%
+              Wins = sum(rank == 1),
+              Podiums = sum(rank <= 3),
+              Top30 = sum(rank <= 30)) %>%
     rename(Type = type) %>%
     select(Event,Type,Races,Wins,Podiums,Top30)
   maj_tot$Event <- factor(maj_tot$Event,
@@ -244,7 +250,8 @@ start_tech <- function(nm){
   mb <- filter(DATA,
                name == nm & 
                  type == 'Distance' & 
-                 cat1 %in% MAJ_INT)
+                 cat1 %in% MAJ_INT) %>%
+    collect()
   if (nrow(mb) == 0) return(NULL)
   mb$tech <- factor(mb$tech,
                     levels = c('C','F','FC'),

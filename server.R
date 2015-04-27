@@ -8,10 +8,17 @@ function(input, output, session) {
   
   #Update name selections based on nation selection
   observe({
-    selected_nation <- input$nationInput
+    possible_names <- DATA %>% 
+      filter(nation == input$nationInput) %>%
+      select(name) %>%
+      collect() %>%
+      unique() %>%
+      arrange(name) %>%
+      magrittr::extract2("name")
+      
     updateSelectInput(session,
                       inputId = "nameInput",
-                      choices = c("",sort(unique(DATA$name[DATA$nation == selected_nation]))))
+                      choices = c("",possible_names))
   })
   
   #Create plots
