@@ -1,5 +1,7 @@
 library(shiny)
 library(shinydashboard)
+#library(Cairo)
+#options(shiny.usecairo = TRUE)
 source("helpers.R")
 source("load_data.R")
 source("load_nations.R")
