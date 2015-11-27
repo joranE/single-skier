@@ -8,7 +8,7 @@ library(readr)
 tech_colors <- brewer.pal(n = 3,name = "Set1")
 tech_colors <- setNames(tech_colors,c("C","F","FC"))
 tech_labels <- c("Classic","Freestyle","Pursuit")
-MAJ_INT <- c("WC","WSC","OWG","OWG")
+MAJ_INT <- c("WC","WSC","OWG","TDS")
 
 plot_dst <- function(nm,type = c("points","rank","mpb"),maj_int = TRUE){
 	type <- match.arg(type)
@@ -21,11 +21,16 @@ plot_dst <- function(nm,type = c("points","rank","mpb"),maj_int = TRUE){
                  "rank" = "Finishing Place",
                  "mpb" = "Standardized % Behind Median")
   if (type == "mpb"){
-    plot_data <- filter(DATA,name == nm & type == "Distance" & !is.na(mpb))
+    #plot_data <- filter(DATA,name == nm & type == "Distance" & !is.na(mpb))
+    plot_data <- filter(DATA,name == nm & type == "Distance" & cat1 %in% MAJ_INT) %>%
+      collect() %>%
+      left_join(RACE_MEDIAN,by = "raceid") %>%
+      left_join(XC_FAC,by = c("gender","start","season")) %>%
+      mutate(mpb = ((100 * (time - median_time) / median_time) - mu) / sigma)
   }else{
     plot_data <- filter(DATA,name == nm & type == "Distance")
   }
-  if (maj_int){
+  if (type != "mpb" & maj_int){
     plot_data <- filter(plot_data,cat1 %in% MAJ_INT)
   }
 	if (NROW(plot_data) < 5){
