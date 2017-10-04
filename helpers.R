@@ -95,7 +95,9 @@ plot_spr_bar <- function(nms,
 		format(abs(x), big.mark = ",", trim = TRUE,
 					 scientific = FALSE, ...)
 	}
-	spr_data <- filter(DATA,name == nms & type == "Sprint") %>% collect()
+	spr_data <- filter(DATA,name == nms & type == "Sprint") %>% 
+	  collect() %>%
+	  filter(!is.na(rank))
 	if (maj_int){
 	  spr_data <- filter(spr_data,cat1 %in% MAJ_INT)
 	}
@@ -151,7 +153,7 @@ plot_spr_bar <- function(nms,
 	p <- ggplot() + 
 		facet +
 		geom_bar(data = upper,
-						 aes(x = season,y = tot,fill = lev,order = lev),
+						 aes(x = season,y = tot,fill = lev),
 						 width = 0.5,
 						 position = "stack",
 						 stat = "identity") + 
