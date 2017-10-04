@@ -26,12 +26,15 @@ plot_dst <- function(nm,type = c("points","rank","mpb"),maj_int = TRUE){
       collect() %>%
       left_join(RACE_MEDIAN,by = "raceid") %>%
       left_join(XC_FAC,by = c("gender","start","season")) %>%
-      mutate(mpb = ((100 * (time - median_time) / median_time) - mu) / sigma)
+      mutate(mpb = ((100 * (time - median_time) / median_time) - mu) / sigma) %>%
+      collect()
   }else{
-    plot_data <- filter(DATA,name == nm & type == "Distance")
+    plot_data <- filter(DATA,name == nm & type == "Distance") %>%
+      collect()
   }
   if (type != "mpb" & maj_int){
-    plot_data <- filter(plot_data,cat1 %in% MAJ_INT)
+    plot_data <- filter(plot_data,cat1 %in% MAJ_INT) %>%
+      collect()
   }
 	if (NROW(plot_data) < 5){
 		return(NULL)
@@ -41,7 +44,7 @@ plot_dst <- function(nm,type = c("points","rank","mpb"),maj_int = TRUE){
 	}else{
 		pts_line <- NULL
 	}
-  plot_data <- plot_data %>% collect()
+  
 	plot_data$date <- as.Date(plot_data$date)
 	ggplot(plot_data,aes_string(x = "date",y = yval)) + 
 		pts_line + 
@@ -63,14 +66,15 @@ plot_spr <- function(nm,type = c("points","rank"),maj_int = TRUE){
   ylab <- switch(type,
                  "points" = "FIS Points",
                  "rank" = "Finishing Place")
-	plot_data <- filter(DATA,name == nm & type == "Sprint")
+	plot_data <- filter(DATA,name == nm & type == "Sprint") %>%
+	  collect()
 	if (maj_int){
 	  plot_data <- filter(plot_data,cat1 %in% MAJ_INT)
 	}
 	if (NROW(plot_data) < 5){
 		return(NULL)
 	}
-  plot_data <- plot_data %>% collect()
+
 	plot_data$date <- as.Date(plot_data$date)
 	ggplot(plot_data,aes_string(x = "date",y = yval)) + 
 		geom_hline(yintercept = 30,color = "black") +
@@ -177,8 +181,7 @@ ath_wjc <- function(nm){
   
   wjc <- filter(ath,cat1 == 'WJC') %>%
     arrange(desc(season),desc(date)) %>%
-    select(season,date,type,length,tech,rank,rankqual,fispoints) %>%
-    rename(Season = season,
+    select(Season = season,
            Date = date,
            Type = type,
            Length = length,
@@ -197,8 +200,7 @@ ath_u23 <- function(nm){
   ath <- filter(DATA,name == nm)
   u23 <- filter(ath,cat1 == 'U23') %>%
     arrange(desc(season),desc(date)) %>%
-    select(season,date,type,length,tech,rank,rankqual,fispoints) %>%
-    rename(Season = season,
+    select(Season = season,
            Date = date,
            Type = type,
            Length = length,
@@ -248,7 +250,7 @@ ath_maj <- function(nm){
   if (nrow(maj_tot) == 0){
     maj_tot <- NULL
   }
-  rbind(maj,maj_tot)
+  bind_rows(maj,maj_tot)
 }
 
 start_tech <- function(nm){
